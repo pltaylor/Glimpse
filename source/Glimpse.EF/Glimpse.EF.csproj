@@ -37,7 +37,10 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="EntityFramework">
-      <HintPath>..\..\packages\EntityFramework.6.0.0-beta1\lib\net45\EntityFramework.dll</HintPath>
+      <HintPath>..\..\packages\EntityFramework.6.0.0-rc1-20802\lib\net45\EntityFramework.dll</HintPath>
+    </Reference>
+    <Reference Include="EntityFramework.SqlServer">
+      <HintPath>..\..\packages\EntityFramework.6.0.0-rc1-20802\lib\net45\EntityFramework.SqlServer.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
@@ -52,7 +55,7 @@
     <Compile Include="AlternateType\GlimpseDbConfiguration.cs" />
     <Compile Include="AlternateType\GlimpseDbConnectionFactory.cs" />
     <Compile Include="AlternateType\GlimpseDbDependencyResolver.cs" />
-    <Compile Include="AlternateType\GlimpseDbProviderFactoryService.cs" />
+    <Compile Include="AlternateType\GlimpseDbProviderFactoryResolver.cs" />
     <Compile Include="AlternateType\GlimpseDbProviderServices.cs" />
     <Compile Include="Initialize.cs" />
     <Compile Include="Inspector\Core\DbConfigurationExecutionTask.cs" />
