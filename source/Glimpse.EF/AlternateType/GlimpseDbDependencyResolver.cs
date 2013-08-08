@@ -58,13 +58,13 @@ namespace Glimpse.EF.AlternateType
                 
             }
 
-            return null;
+            return rootResolver.GetService(type, key);  
         }
 
 
         public IEnumerable<object> GetServices(Type type, object key)
         {
-            return null;
+            return rootResolver.GetServices(type, key);  
         }
     }
 }
