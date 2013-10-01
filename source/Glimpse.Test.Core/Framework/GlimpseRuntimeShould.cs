@@ -6,10 +6,12 @@ using Glimpse.Core;
 using Glimpse.Core.Extensibility;
 using Glimpse.Core.Extensions;
 using Glimpse.Core.Framework;
+using Glimpse.Test.Common;
 using Glimpse.Test.Core.TestDoubles;
 using Glimpse.Test.Core.Tester;
 using Moq;
 using Xunit;
+using Xunit.Extensions;
 
 namespace Glimpse.Test.Core.Framework
 {
@@ -25,6 +27,7 @@ namespace Glimpse.Test.Core.Framework
         public void Dispose()
         {
             Runtime = null;
+            GlimpseRuntime.Reset();
         }
 
         [Fact]
@@ -831,6 +834,34 @@ namespace Glimpse.Test.Core.Framework
         public void ThrowExceptionWhenExecutingResourceWithNullParameters()
         {
             Assert.Throws<ArgumentNullException>(() => Runtime.ExecuteResource("any", null));
+        }
+
+        [Fact]
+        public void ThrowExceptionWhenAccessingNonInitializedInstance()
+        {
+            Assert.Throws<GlimpseException>(() => GlimpseRuntime.Instance);
+        }
+
+        [Theory, AutoMock]
+        public void InitializeSetsInstanceWhenExecuted(IGlimpseConfiguration configuration)
+        {
+            GlimpseRuntime.Initialize(configuration);
+
+            Assert.NotNull(GlimpseRuntime.Instance);
+        }
+
+        [Theory, AutoMock]
+        public void InitializeSetsConfigurationWhenExecuted(IGlimpseConfiguration configuration)
+        {
+            GlimpseRuntime.Initialize(configuration);
+
+            Assert.Equal(configuration, GlimpseRuntime.Instance.Configuration);
+        }
+
+        [Fact]
+        public void InitializeThrowsWithNullConfiguration()
+        {
+            Assert.Throws<ArgumentNullException>(() => GlimpseRuntime.Initialize(null));
         }
     }
 }

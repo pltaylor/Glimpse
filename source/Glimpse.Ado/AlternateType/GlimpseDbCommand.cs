@@ -46,7 +46,7 @@ namespace Glimpse.Ado.AlternateType
  
         internal IMessageBroker MessageBroker
         {
-            get { return messageBroker ?? (messageBroker = GlimpseConfiguration.GetConfiguredMessageBroker()); }
+            get { return messageBroker ?? (messageBroker = GlimpseRuntime.Instance.Configuration.MessageBroker); }
             set { messageBroker = value; }
         }
 
