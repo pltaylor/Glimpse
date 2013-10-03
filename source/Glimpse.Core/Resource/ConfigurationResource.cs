@@ -78,7 +78,7 @@ namespace Glimpse.Core.Resource
         /// Use of <see cref="IPrivilegedResource" /> is reserved.
         /// </remarks>
         /// 
-        public IResourceResult Execute(IResourceContext context, IGlimpseConfiguration configuration)
+        public IResourceResult Execute(IResourceContext context, IGlimpseConfiguration configuration, IFrameworkProvider frameworkProvider)
         {
             var content = new StringBuilder();
             var packages = this.FindPackages();
@@ -221,7 +221,7 @@ namespace Glimpse.Core.Resource
             GroupContent(content, (x, y) => x.AppendFormat("<li><span class=\"code\">{0}</span> - {1}</li>", y.GetType().FullName, y.Order), configuration.ClientScripts.OrderBy(x => x.GetType().FullName), packages);
             
             //More Details 
-            content.AppendFormat("</ul></li><li><strong>Framework Provider</strong>: <span class=\"code\">{0}</span></li>", configuration.FrameworkProvider.GetType().FullName);
+            content.AppendFormat("</ul></li><li><strong>Framework Provider</strong>: <span class=\"code\">{0}</span></li>", frameworkProvider.GetType().FullName);
             content.AppendFormat("<li><strong>Html Encoder</strong>: <span class=\"code\">{0}</span></li>", configuration.HtmlEncoder.GetType().FullName);
             content.AppendFormat("<li><strong>Logger</strong>: <span class=\"code\">{0}</span></li>", configuration.Logger.GetType().FullName);
             content.AppendFormat("<li><strong>Persistence Store</strong>: <span class=\"code\">{0}</span></li>", configuration.PersistenceStore.GetType().FullName);

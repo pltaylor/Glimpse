@@ -8,13 +8,9 @@ namespace Glimpse.AspNet
 {
     public class AspNetFrameworkProvider : IFrameworkProvider
     {
-        /// <summary>
-        /// Wrapper around HttpContext.Current for testing purposes. Not for public use.
-        /// </summary>
-        private HttpContextBase context;
-
-        public AspNetFrameworkProvider(ILogger logger)
+        public AspNetFrameworkProvider(HttpContextBase context, ILogger logger)
         {
+            Context = context;
             Logger = logger;
         }
 
@@ -38,11 +34,7 @@ namespace Glimpse.AspNet
             get { return new RequestMetadata(Context); }
         }
 
-        internal HttpContextBase Context
-        {
-            get { return context ?? new HttpContextWrapper(HttpContext.Current); }
-            set { context = value; }
-        }
+        internal HttpContextBase Context { get; set; }
 
         private ILogger Logger { get; set; }
 

@@ -12,6 +12,7 @@ using Glimpse.Test.Core.Tester;
 using Moq;
 using Xunit;
 using Xunit.Extensions;
+using Glimpse.Test.Core.Extensions;
 
 namespace Glimpse.Test.Core.Framework
 {
@@ -33,10 +34,11 @@ namespace Glimpse.Test.Core.Framework
         [Fact]
         public void SetRequestIdOnBeginRequest()
         {
-            Runtime.FrameworkProviderMock.Setup(fp => fp.HttpRequestStore).Returns(Runtime.HttpRequestStoreMock.Object);
+            var providerMock = new Mock<IFrameworkProvider>().Setup();
+            providerMock.Setup(fp => fp.HttpRequestStore).Returns(Runtime.HttpRequestStoreMock.Object);
 
             Runtime.Initialize();
-            Runtime.BeginRequest();
+            Runtime.BeginRequest(providerMock.Object);
 
             Runtime.HttpRequestStoreMock.Verify(store => store.Set(Constants.RequestIdKey, It.IsAny<Guid>()));
         }
@@ -44,9 +46,10 @@ namespace Glimpse.Test.Core.Framework
         [Fact]
         public void StartGlobalStopwatchOnBeginRequest()
         {
-            Runtime.FrameworkProviderMock.Setup(fp => fp.HttpRequestStore).Returns(Runtime.HttpRequestStoreMock.Object);
+            var providerMock = new Mock<IFrameworkProvider>().Setup();
+            providerMock.Setup(fp => fp.HttpRequestStore).Returns(Runtime.HttpRequestStoreMock.Object);
             Runtime.Initialize();
-            Runtime.BeginRequest();
+            Runtime.BeginRequest(providerMock.Object);
 
             Runtime.HttpRequestStoreMock.Verify(store => store.Set(Constants.GlobalStopwatchKey, It.IsAny<Stopwatch>()));
         }
@@ -60,30 +63,36 @@ namespace Glimpse.Test.Core.Framework
         [Fact]
         public void ThrowsExceptionIfEndRequestIsCalledBeforeBeginRequest()
         {
+            var providerMock = new Mock<IFrameworkProvider>().Setup();
+
             Runtime.Initialize();
             //runtime.BeginRequest(); commented out on purpose for this test
 
-            Assert.Throws<GlimpseException>(() => Runtime.EndRequest());
+            Assert.Throws<GlimpseException>(() => Runtime.EndRequest(providerMock.Object));
         }
 
         [Fact]
         public void ThrowsExceptionIfBeginRequestIsCalledBeforeInittialize()
         {
+            var providerMock = new Mock<IFrameworkProvider>().Setup();
+
             //Runtime.Initialize();commented out on purpose for this test
-            
-            Assert.Throws<GlimpseException>(() => Runtime.BeginRequest());
+
+            Assert.Throws<GlimpseException>(() => Runtime.BeginRequest(providerMock.Object));
         }
 
         [Fact]
         public void ExecutePluginsWithDefaultLifeCycle()
         {
+            var providerMock = new Mock<IFrameworkProvider>().Setup();
+
             Runtime.Configuration.Tabs.Add(Runtime.TabMock.Object);
             Runtime.Initialize();
 
-            Runtime.BeginRequest();
-            Runtime.EndRequest();
+            Runtime.BeginRequest(providerMock.Object);
+            Runtime.EndRequest(providerMock.Object);
 
-            var results = Runtime.Configuration.FrameworkProvider.HttpRequestStore.Get<IDictionary<string, TabResult>>(Constants.TabResultsDataStoreKey);
+            var results = providerMock.Object.HttpRequestStore.Get<IDictionary<string, TabResult>>(Constants.TabResultsDataStoreKey);
             Assert.NotNull(results);
             Assert.Equal(1, results.Count);
 
@@ -93,13 +102,15 @@ namespace Glimpse.Test.Core.Framework
         [Fact]
         public void ExecutePluginsWithLifeCycleMismatch()
         {
+            var providerMock = new Mock<IFrameworkProvider>().Setup();
+
             Runtime.TabMock.Setup(m => m.ExecuteOn).Returns(RuntimeEvent.EndRequest);
 
             Runtime.Configuration.Tabs.Add(Runtime.TabMock.Object);
             Runtime.Initialize();
-            Runtime.BeginRequest();
+            Runtime.BeginRequest(providerMock.Object);
 
-            var results = Runtime.Configuration.FrameworkProvider.HttpRequestStore.Get<IDictionary<string, TabResult>>(Constants.TabResultsDataStoreKey);
+            var results = providerMock.Object.HttpRequestStore.Get<IDictionary<string, TabResult>>(Constants.TabResultsDataStoreKey);
             Assert.NotNull(results);
             Assert.Equal(0, results.Count);
 
@@ -109,12 +120,14 @@ namespace Glimpse.Test.Core.Framework
         [Fact]
         public void ExecutePluginsMakeSureNamesAreJsonSafe()
         {
+            var providerMock = new Mock<IFrameworkProvider>().Setup();
+
             Runtime.Configuration.Tabs.Add(Runtime.TabMock.Object);
             Runtime.Initialize();
-            Runtime.BeginRequest();
-            Runtime.EndRequest();
+            Runtime.BeginRequest(providerMock.Object);
+            Runtime.EndRequest(providerMock.Object);
 
-            var results = Runtime.Configuration.FrameworkProvider.HttpRequestStore.Get<IDictionary<string, TabResult>>(Constants.TabResultsDataStoreKey);
+            var results = providerMock.Object.HttpRequestStore.Get<IDictionary<string, TabResult>>(Constants.TabResultsDataStoreKey);
             Assert.NotNull(results);
             Assert.Equal(1, results.Count);
             Assert.Contains("castle_proxies_itabproxy", results.First().Key); 
@@ -123,12 +136,13 @@ namespace Glimpse.Test.Core.Framework
         [Fact]
         public void ExecutePluginsWithMatchingRuntimeContextType()
         {
+            var providerMock = new Mock<IFrameworkProvider>().Setup();
             Runtime.Configuration.Tabs.Add(Runtime.TabMock.Object);
             Runtime.Initialize();
-            Runtime.BeginRequest();
-            Runtime.EndRequest();
+            Runtime.BeginRequest(providerMock.Object);
+            Runtime.EndRequest(providerMock.Object);
 
-            var results = Runtime.Configuration.FrameworkProvider.HttpRequestStore.Get<IDictionary<string, TabResult>>(Constants.TabResultsDataStoreKey);
+            var results = providerMock.Object.HttpRequestStore.Get<IDictionary<string, TabResult>>(Constants.TabResultsDataStoreKey);
             Assert.NotNull(results);
             Assert.Equal(1, results.Count);
 
@@ -138,14 +152,15 @@ namespace Glimpse.Test.Core.Framework
         [Fact]
         public void ExecutePluginsWithUnknownRuntimeContextType()
         {
+            var providerMock = new Mock<IFrameworkProvider>().Setup();
             Runtime.TabMock.Setup(m => m.RequestContextType).Returns<Type>(null);
 
             Runtime.Configuration.Tabs.Add(Runtime.TabMock.Object);
             Runtime.Initialize();
-            Runtime.BeginRequest();
-            Runtime.EndRequest();
+            Runtime.BeginRequest(providerMock.Object);
+            Runtime.EndRequest(providerMock.Object);
 
-            var results = Runtime.Configuration.FrameworkProvider.HttpRequestStore.Get<IDictionary<string, TabResult>>(Constants.TabResultsDataStoreKey);
+            var results = providerMock.Object.HttpRequestStore.Get<IDictionary<string, TabResult>>(Constants.TabResultsDataStoreKey);
             Assert.NotNull(results);
             Assert.Equal(1, results.Count);
 
@@ -155,15 +170,16 @@ namespace Glimpse.Test.Core.Framework
         [Fact]
         public void ExecutePluginsWithDuplicateCollectionEntries()
         {
+            var providerMock = new Mock<IFrameworkProvider>().Setup();
             //Insert the same plugin multiple times
             Runtime.Configuration.Tabs.Add(Runtime.TabMock.Object);
             Runtime.Configuration.Tabs.Add(Runtime.TabMock.Object);
             Runtime.Configuration.Tabs.Add(Runtime.TabMock.Object);
             Runtime.Initialize();
-            Runtime.BeginRequest();
-            Runtime.EndRequest();
+            Runtime.BeginRequest(providerMock.Object);
+            Runtime.EndRequest(providerMock.Object);
 
-            var results = Runtime.Configuration.FrameworkProvider.HttpRequestStore.Get<IDictionary<string, TabResult>>(Constants.TabResultsDataStoreKey);
+            var results = providerMock.Object.HttpRequestStore.Get<IDictionary<string, TabResult>>(Constants.TabResultsDataStoreKey);
             Assert.NotNull(results);
             Assert.Equal(1, results.Count);
 
@@ -173,14 +189,15 @@ namespace Glimpse.Test.Core.Framework
         [Fact]
         public void ExecutePluginThatFails()
         {
+            var providerMock = new Mock<IFrameworkProvider>().Setup();
             Runtime.TabMock.Setup(p => p.GetData(It.IsAny<ITabContext>())).Throws<DummyException>();
 
             Runtime.Configuration.Tabs.Add(Runtime.TabMock.Object);
             Runtime.Initialize();
-            Runtime.BeginRequest();
-            Runtime.EndRequest();
+            Runtime.BeginRequest(providerMock.Object);
+            Runtime.EndRequest(providerMock.Object);
 
-            var results = Runtime.Configuration.FrameworkProvider.HttpRequestStore.Get<IDictionary<string, TabResult>>(Constants.TabResultsDataStoreKey);
+            var results = providerMock.Object.HttpRequestStore.Get<IDictionary<string, TabResult>>(Constants.TabResultsDataStoreKey);
             Assert.NotNull(results);
             Assert.Equal(1, results.Count);
 
@@ -193,12 +210,13 @@ namespace Glimpse.Test.Core.Framework
         [Fact]
         public void ExecutePluginsWithEmptyCollection()
         {
+            var providerMock = new Mock<IFrameworkProvider>().Setup();
             Runtime.Configuration.Tabs.Clear();
             Runtime.Initialize();
-            Runtime.BeginRequest();
-            Runtime.EndRequest();
+            Runtime.BeginRequest(providerMock.Object);
+            Runtime.EndRequest(providerMock.Object);
 
-            var results = Runtime.Configuration.FrameworkProvider.HttpRequestStore.Get<IDictionary<string, TabResult>>(Constants.TabResultsDataStoreKey);
+            var results = providerMock.Object.HttpRequestStore.Get<IDictionary<string, TabResult>>(Constants.TabResultsDataStoreKey);
             Assert.NotNull(results);
             Assert.Equal(0, results.Count);
         }
@@ -292,20 +310,23 @@ namespace Glimpse.Test.Core.Framework
         [Fact]
         public void InjectHttpResponseBodyDuringEndRequest()
         {
-            Runtime.Initialize();
-            Runtime.BeginRequest();
-            Runtime.EndRequest();
+            var providerMock = new Mock<IFrameworkProvider>().Setup();
 
-            Runtime.FrameworkProviderMock.Verify(fp => fp.InjectHttpResponseBody(It.IsAny<string>()));
+            Runtime.Initialize();
+            Runtime.BeginRequest(providerMock.Object);
+            Runtime.EndRequest(providerMock.Object);
+
+            providerMock.Verify(fp => fp.InjectHttpResponseBody(It.IsAny<string>()));
         }
         
         [Fact]
         public void PersistDataDuringEndRequest()
         {
+            var providerMock = new Mock<IFrameworkProvider>().Setup();
             Runtime.Configuration.Tabs.Add(Runtime.TabMock.Object);
             Runtime.Initialize();
-            Runtime.BeginRequest();
-            Runtime.EndRequest();
+            Runtime.BeginRequest(providerMock.Object);
+            Runtime.EndRequest(providerMock.Object);
 
             Runtime.PersistenceStoreMock.Verify(ps => ps.Save(It.IsAny<GlimpseRequest>()));
         }
@@ -313,25 +334,27 @@ namespace Glimpse.Test.Core.Framework
         [Fact]
         public void SetResponseHeaderDuringEndRequest()
         {
+            var providerMock = new Mock<IFrameworkProvider>().Setup();
             Runtime.Configuration.Tabs.Add(Runtime.TabMock.Object);
             Runtime.Initialize();
-            Runtime.BeginRequest();
-            Runtime.EndRequest();
+            Runtime.BeginRequest(providerMock.Object);
+            Runtime.EndRequest(providerMock.Object);
 
-            Runtime.FrameworkProviderMock.Verify(fp => fp.SetHttpResponseHeader(Constants.HttpResponseHeader, It.IsAny<string>()));
+            providerMock.Verify(fp => fp.SetHttpResponseHeader(Constants.HttpResponseHeader, It.IsAny<string>()));
         }
 
 
         [Fact]
         public void ExecuteDefaultResource()
         {
+            var providerMock = new Mock<IFrameworkProvider>().Setup();
             var name = "TestResource";
             Runtime.ResourceMock.Setup(r => r.Name).Returns(name);
             Runtime.ResourceMock.Setup(r => r.Execute(It.IsAny<IResourceContext>())).Returns(Runtime.ResourceResultMock.Object);
             Runtime.Configuration.Resources.Add(Runtime.ResourceMock.Object);
             Runtime.Configuration.DefaultResource = Runtime.ResourceMock.Object;
 
-            Runtime.ExecuteDefaultResource();
+            Runtime.ExecuteDefaultResource(providerMock.Object);
 
             Runtime.ResourceMock.Verify(r => r.Execute(It.IsAny<IResourceContext>()), Times.Once());
             Runtime.ResourceResultMock.Verify(r => r.Execute(It.IsAny<IResourceResultContext>()));
@@ -340,12 +363,13 @@ namespace Glimpse.Test.Core.Framework
         [Fact]
         public void ExecuteResourceWithOrderedParameters()
         {
+            var providerMock = new Mock<IFrameworkProvider>().Setup();
             var name = "TestResource";
             Runtime.ResourceMock.Setup(r => r.Name).Returns(name);
             Runtime.ResourceMock.Setup(r => r.Execute(It.IsAny<IResourceContext>())).Returns(Runtime.ResourceResultMock.Object);
             Runtime.Configuration.Resources.Add(Runtime.ResourceMock.Object);
 
-            Runtime.ExecuteResource(name.ToLower(), new ResourceParameters(new[]{"One","Two"}));
+            Runtime.ExecuteResource(providerMock.Object, name.ToLower(), new ResourceParameters(new[] { "One", "Two" }));
 
             Runtime.ResourceMock.Verify(r => r.Execute(It.IsAny<IResourceContext>()), Times.Once());
             Runtime.ResourceResultMock.Verify(r => r.Execute(It.IsAny<IResourceResultContext>()));
@@ -354,12 +378,13 @@ namespace Glimpse.Test.Core.Framework
         [Fact]
         public void ExecuteResourceWithNamedParameters()
         {
+            var providerMock = new Mock<IFrameworkProvider>().Setup();
             var name = "TestResource";
             Runtime.ResourceMock.Setup(r => r.Name).Returns(name);
             Runtime.ResourceMock.Setup(r => r.Execute(It.IsAny<IResourceContext>())).Returns(Runtime.ResourceResultMock.Object);
             Runtime.Configuration.Resources.Add(Runtime.ResourceMock.Object);
 
-            Runtime.ExecuteResource(name.ToLower(), new ResourceParameters(new Dictionary<string, string>{{"One", "1"}, {"Two","2"}}));
+            Runtime.ExecuteResource(providerMock.Object, name.ToLower(), new ResourceParameters(new Dictionary<string, string> { { "One", "1" }, { "Two", "2" } }));
 
             Runtime.ResourceMock.Verify(r => r.Execute(It.IsAny<IResourceContext>()), Times.Once());
             Runtime.ResourceResultMock.Verify(r => r.Execute(It.IsAny<IResourceResultContext>()));
@@ -368,50 +393,55 @@ namespace Glimpse.Test.Core.Framework
         [Fact]
         public void HandleUnknownResource()
         {
+            var providerMock = new Mock<IFrameworkProvider>().Setup();
             Runtime.Configuration.Resources.Clear();
 
-            Runtime.ExecuteResource("random name that doesn't exist", new ResourceParameters(new string[]{}));
+            Runtime.ExecuteResource(providerMock.Object, "random name that doesn't exist", new ResourceParameters(new string[]{}));
 
-            Runtime.FrameworkProviderMock.Verify(fp => fp.SetHttpResponseStatusCode(404), Times.Once());
+            providerMock.Verify(fp => fp.SetHttpResponseStatusCode(404), Times.Once());
         }
 
         [Fact]
         public void HandleDuplicateResources()
         {
+            var providerMock = new Mock<IFrameworkProvider>().Setup();
             var name = "Duplicate";
             Runtime.ResourceMock.Setup(r => r.Name).Returns(name);
 
             Runtime.Configuration.Resources.Add(Runtime.ResourceMock.Object);
             Runtime.Configuration.Resources.Add(Runtime.ResourceMock.Object);
 
-            Runtime.ExecuteResource(name, new ResourceParameters(new string[]{}));
+            Runtime.ExecuteResource(providerMock.Object, name, new ResourceParameters(new string[] { }));
 
-            Runtime.FrameworkProviderMock.Verify(fp => fp.SetHttpResponseStatusCode(500), Times.Once());
+            providerMock.Verify(fp => fp.SetHttpResponseStatusCode(500), Times.Once());
         }
 
         [Fact]
         public void ThrowExceptionWithEmptyResourceName()
         {
-            Assert.Throws<ArgumentNullException>(() => Runtime.ExecuteResource("", new ResourceParameters(new string[]{})));
+            var providerMock = new Mock<IFrameworkProvider>().Setup();
+            Assert.Throws<ArgumentNullException>(() => Runtime.ExecuteResource(providerMock.Object, "", new ResourceParameters(new string[]{})));
         }
 
         [Fact]
         public void HandleResourcesThatThrowExceptions()
         {
+            var providerMock = new Mock<IFrameworkProvider>().Setup();
             var name = "Anything";
             Runtime.ResourceMock.Setup(r => r.Name).Returns(name);
             Runtime.ResourceMock.Setup(r => r.Execute(It.IsAny<IResourceContext>())).Throws<Exception>();
 
             Runtime.Configuration.Resources.Add(Runtime.ResourceMock.Object);
 
-            Runtime.ExecuteResource(name, new ResourceParameters(new string[]{}));
+            Runtime.ExecuteResource(providerMock.Object, name, new ResourceParameters(new string[] { }));
 
-            Runtime.FrameworkProviderMock.Verify(fp => fp.SetHttpResponseStatusCode(500), Times.Once());
+            providerMock.Verify(fp => fp.SetHttpResponseStatusCode(500), Times.Once());
         }
 
         [Fact]
         public void EnsureNullIsNotPassedToResourceExecute()
         {
+            var providerMock = new Mock<IFrameworkProvider>().Setup();
             var name = "aName";
             Runtime.ResourceMock.Setup(r => r.Name).Returns(name);
             Runtime.ResourceMock.Setup(r => r.Execute(It.IsAny<IResourceContext>())).Returns(
@@ -419,7 +449,7 @@ namespace Glimpse.Test.Core.Framework
 
             Runtime.Configuration.Resources.Add(Runtime.ResourceMock.Object);
 
-            Runtime.ExecuteResource(name, new ResourceParameters(new Dictionary<string, string>()));
+            Runtime.ExecuteResource(providerMock.Object, name, new ResourceParameters(new Dictionary<string, string>()));
 
             Runtime.ResourceMock.Verify(r => r.Execute(null), Times.Never());
         }
@@ -427,6 +457,7 @@ namespace Glimpse.Test.Core.Framework
         [Fact]
         public void HandleResourceResultsThatThrowExceptions()
         {
+            var providerMock = new Mock<IFrameworkProvider>().Setup();
             var name = "Anything";
             Runtime.ResourceMock.Setup(r => r.Name).Returns(name);
             Runtime.ResourceMock.Setup(r => r.Execute(It.IsAny<IResourceContext>())).Returns(Runtime.ResourceResultMock.Object);
@@ -435,7 +466,7 @@ namespace Glimpse.Test.Core.Framework
 
             Runtime.Configuration.Resources.Add(Runtime.ResourceMock.Object);
 
-            Runtime.ExecuteResource(name, new ResourceParameters(new string[]{}));
+            Runtime.ExecuteResource(providerMock.Object, name, new ResourceParameters(new string[] { }));
 
             Runtime.LoggerMock.Verify(l => l.Fatal(It.IsAny<string>(), It.IsAny<Exception>(), It.IsAny<object[]>()), Times.Once());
         }
@@ -450,6 +481,7 @@ namespace Glimpse.Test.Core.Framework
             Assert.True(result);
         }
 
+/*
         [Fact]
         public void ProvideLowestModeLevelOnInitializing()
         {
@@ -464,10 +496,13 @@ namespace Glimpse.Test.Core.Framework
 
             Assert.False(result);
         }
+*/
 
+/*
         [Fact]
         public void NotIncreaseModeOverLifetimeOfRequest()
         {
+            var providerMock = new Mock<IFrameworkProvider>().Setup();
             var glimpseMode = RuntimePolicy.ModifyResponseBody;
             Runtime.Configuration.DefaultRuntimePolicy = glimpseMode;
 
@@ -477,10 +512,11 @@ namespace Glimpse.Test.Core.Framework
 
             Runtime.Configuration.DefaultRuntimePolicy = RuntimePolicy.On;
 
-            Runtime.BeginRequest();
+            Runtime.BeginRequest(providerMock.Object);
 
-            Assert.Equal(glimpseMode, Runtime.Configuration.FrameworkProvider.HttpRequestStore.Get(Constants.RuntimePolicyKey));
+            Assert.Equal(glimpseMode, providerMock.Object.HttpRequestStore.Get(Constants.RuntimePolicyKey));
         }
+*/
 
         [Fact]
         public void RespectConfigurationSettingInValidators()
@@ -498,28 +534,34 @@ namespace Glimpse.Test.Core.Framework
         [Fact]
         public void ValidateAtBeginRequest()
         {
+            var providerMock = new Mock<IFrameworkProvider>().Setup();
             Runtime.RuntimePolicyMock.Setup(rp => rp.ExecuteOn).Returns(RuntimeEvent.BeginRequest);
 
             Runtime.Configuration.RuntimePolicies.Add(Runtime.RuntimePolicyMock.Object);
             Runtime.Initialize();
-            Runtime.BeginRequest();
+            Runtime.BeginRequest(providerMock.Object);
 
             Runtime.RuntimePolicyMock.Verify(v=>v.Execute(It.IsAny<IRuntimePolicyContext>()), Times.AtLeastOnce());
         }
 
+/*
         [Fact]
         public void SkipEecutingInitializeIfGlimpseModeIfOff()
         {
+            var providerMock = new Mock<IFrameworkProvider>().Setup();
             Runtime.Configuration.DefaultRuntimePolicy = RuntimePolicy.Off;
             
             Runtime.Initialize();
             
-            Assert.Equal(RuntimePolicy.Off, Runtime.Configuration.FrameworkProvider.HttpRequestStore.Get(Constants.RuntimePolicyKey));
+            Assert.Equal(RuntimePolicy.Off, providerMock.Object.HttpRequestStore.Get(Constants.RuntimePolicyKey));
         }
+*/
 
+/*
         [Fact] //False result means GlimpseMode == Off
         public void WriteCurrentModeToRequestState()
         {
+            var providerMock = new Mock<IFrameworkProvider>().Setup();
             Runtime.RuntimePolicyMock.Setup(v => v.Execute(It.IsAny<IRuntimePolicyContext>())).Returns(RuntimePolicy.ModifyResponseBody);
             Runtime.Configuration.RuntimePolicies.Add(Runtime.RuntimePolicyMock.Object);
 
@@ -527,39 +569,46 @@ namespace Glimpse.Test.Core.Framework
 
             Assert.True(result);
 
-            Assert.Equal(RuntimePolicy.ModifyResponseBody, Runtime.Configuration.FrameworkProvider.HttpRequestStore.Get(Constants.RuntimePolicyKey));
+            Assert.Equal(RuntimePolicy.ModifyResponseBody, providerMock.Object.HttpRequestStore.Get(Constants.RuntimePolicyKey));
         }
+*/
 
+/*
         [Fact]
         public void SkipInitializeIfGlipseModeIsOff()
         {
+            var providerMock = new Mock<IFrameworkProvider>().Setup();
             Runtime.Configuration.DefaultRuntimePolicy = RuntimePolicy.Off;
 
             Runtime.Initialize();
 
-            Assert.Equal(RuntimePolicy.Off, Runtime.Configuration.FrameworkProvider.HttpRequestStore.Get(Constants.RuntimePolicyKey));
+            Assert.Equal(RuntimePolicy.Off, providerMock.Object.HttpRequestStore.Get(Constants.RuntimePolicyKey));
         }
+*/
 
         [Fact]
         public void SkipExecutingResourceIfGlipseModeIsOff()
         {
+            var providerMock = new Mock<IFrameworkProvider>().Setup();
             Runtime.Configuration.DefaultRuntimePolicy = RuntimePolicy.Off;
 
-            Runtime.ExecuteResource("doesn't matter", new ResourceParameters(new string[]{}));
+            Runtime.ExecuteResource(providerMock.Object, "doesn't matter", new ResourceParameters(new string[]{}));
 
-            Assert.Equal(RuntimePolicy.Off, Runtime.Configuration.FrameworkProvider.HttpRequestStore.Get(Constants.RuntimePolicyKey));
+            Assert.Equal(RuntimePolicy.Off, providerMock.Object.HttpRequestStore.Get(Constants.RuntimePolicyKey));
         }
 
         [Fact]
         public void ValidateAtEndRequest()
         {
+            var providerMock = new Mock<IFrameworkProvider>().Setup();
             Runtime.Configuration.DefaultRuntimePolicy = RuntimePolicy.Off;
 
-            Runtime.EndRequest();
+            Runtime.EndRequest(providerMock.Object);
 
-            Assert.Equal(RuntimePolicy.Off, Runtime.Configuration.FrameworkProvider.HttpRequestStore.Get(Constants.RuntimePolicyKey));
+            Assert.Equal(RuntimePolicy.Off, providerMock.Object.HttpRequestStore.Get(Constants.RuntimePolicyKey));
         }
 
+/*
         [Fact]
         public void ExecuteOnlyTheProperValidators()
         {
@@ -572,6 +621,7 @@ namespace Glimpse.Test.Core.Framework
             Runtime.RuntimePolicyMock.Verify(v=>v.Execute(It.IsAny<IRuntimePolicyContext>()), Times.Once());
             validatorMock2.Verify(v=>v.Execute(It.IsAny<IRuntimePolicyContext>()), Times.Never());
         }
+*/
 
         [Fact]
         public void SetIsInitializedWhenInitialized()
@@ -714,15 +764,17 @@ namespace Glimpse.Test.Core.Framework
         [Fact]
         public void LogErrorOnPersistenceStoreException()
         {
+            var providerMock = new Mock<IFrameworkProvider>().Setup();
             Runtime.PersistenceStoreMock.Setup(ps => ps.Save(It.IsAny<GlimpseRequest>())).Throws<DummyException>();
 
             Runtime.Initialize();
-            Runtime.BeginRequest();
-            Runtime.EndRequest();
+            Runtime.BeginRequest(providerMock.Object);
+            Runtime.EndRequest(providerMock.Object);
 
             Runtime.LoggerMock.Verify(l => l.Error(It.IsAny<string>(), It.IsAny<DummyException>(), It.IsAny<object[]>()));
         }
 
+/*
         [Fact]
         public void LogWarningWhenRuntimePolicyThrowsException()
         {
@@ -734,17 +786,19 @@ namespace Glimpse.Test.Core.Framework
 
             Runtime.LoggerMock.Verify(l => l.Warn(It.IsAny<string>(), It.IsAny<DummyException>(), It.IsAny<object[]>()));
         }
+*/
 
         [Fact]
         public void LogErrorWhenDynamicScriptTagThrowsException()
         {
+            var providerMock = new Mock<IFrameworkProvider>().Setup();
             Runtime.DynamicScriptMock.Setup(ds => ds.GetResourceName()).Throws<DummyException>();
 
             Runtime.Configuration.ClientScripts.Add(Runtime.DynamicScriptMock.Object);
 
             Runtime.Initialize();
-            Runtime.BeginRequest();
-            Runtime.EndRequest();
+            Runtime.BeginRequest(providerMock.Object);
+            Runtime.EndRequest(providerMock.Object);
 
             Runtime.LoggerMock.Verify(l => l.Error(It.IsAny<string>(), It.IsAny<DummyException>(), It.IsAny<object[]>()));
         }
@@ -753,13 +807,14 @@ namespace Glimpse.Test.Core.Framework
         [Fact]
         public void LogErrorWhenStaticScriptTagThrowsException()
         {
+            var providerMock = new Mock<IFrameworkProvider>().Setup();
             Runtime.StaticScriptMock.Setup(ds => ds.GetUri(It.IsAny<string>())).Throws<DummyException>();
 
             Runtime.Configuration.ClientScripts.Add(Runtime.StaticScriptMock.Object);
 
             Runtime.Initialize();
-            Runtime.BeginRequest();
-            Runtime.EndRequest();
+            Runtime.BeginRequest(providerMock.Object);
+            Runtime.EndRequest(providerMock.Object);
 
             Runtime.LoggerMock.Verify(l => l.Error(It.IsAny<string>(), It.IsAny<DummyException>(), It.IsAny<object[]>()));
         }
@@ -767,7 +822,8 @@ namespace Glimpse.Test.Core.Framework
         [Fact]
         public void BeginRuntimeReturnsEarlyIfRuntimePolicyIsOff()
         {
-            Runtime.FrameworkProviderMock.Setup(fp => fp.HttpRequestStore).Returns(Runtime.HttpRequestStoreMock.Object);
+            var providerMock = new Mock<IFrameworkProvider>().Setup();
+            providerMock.Setup(fp => fp.HttpRequestStore).Returns(Runtime.HttpRequestStoreMock.Object);
 
             Runtime.Initialize();
 
@@ -775,7 +831,7 @@ namespace Glimpse.Test.Core.Framework
             Runtime.RuntimePolicyMock.Setup(p => p.ExecuteOn).Returns(RuntimeEvent.BeginRequest);
             Runtime.Configuration.RuntimePolicies.Add(Runtime.RuntimePolicyMock.Object);
 
-            Runtime.BeginRequest();
+            Runtime.BeginRequest(providerMock.Object);
 
             Runtime.HttpRequestStoreMock.Verify(fp=>fp.Set(Constants.RequestIdKey, It.IsAny<Guid>()), Times.Never());
         }
@@ -783,12 +839,13 @@ namespace Glimpse.Test.Core.Framework
         [Fact]
         public void ExecuteTabsOnBeginSessionAccess()
         {
+            var providerMock = new Mock<IFrameworkProvider>().Setup();
             Runtime.TabMock.Setup(t => t.ExecuteOn).Returns(RuntimeEvent.BeginSessionAccess);
             Runtime.Configuration.Tabs.Add(Runtime.TabMock.Object);
 
             Runtime.Initialize();
-            Runtime.BeginRequest();
-            Runtime.BeginSessionAccess();
+            Runtime.BeginRequest(providerMock.Object);
+            Runtime.BeginSessionAccess(providerMock.Object);
 
             Runtime.TabMock.Verify(t=>t.GetData(It.IsAny<ITabContext>()), Times.Once());
         }
@@ -796,12 +853,13 @@ namespace Glimpse.Test.Core.Framework
         [Fact]
         public void ExecuteTabsOnEndSessionAccess()
         {
+            var providerMock = new Mock<IFrameworkProvider>().Setup();
             Runtime.TabMock.Setup(t => t.ExecuteOn).Returns(RuntimeEvent.EndSessionAccess);
             Runtime.Configuration.Tabs.Add(Runtime.TabMock.Object);
 
             Runtime.Initialize();
-            Runtime.BeginRequest();
-            Runtime.EndSessionAccess();
+            Runtime.BeginRequest(providerMock.Object);
+            Runtime.EndSessionAccess(providerMock.Object);
 
             Runtime.TabMock.Verify(t => t.GetData(It.IsAny<ITabContext>()), Times.Once());
         }
@@ -809,11 +867,12 @@ namespace Glimpse.Test.Core.Framework
         [Fact]
         public void StopBeginSessionAccessWithRuntimePolicyOff()
         {
+            var providerMock = new Mock<IFrameworkProvider>().Setup();
             Runtime.Configuration.DefaultRuntimePolicy = RuntimePolicy.Off;
             Runtime.TabMock.Setup(t => t.ExecuteOn).Returns(RuntimeEvent.BeginSessionAccess);
             Runtime.Configuration.Tabs.Add(Runtime.TabMock.Object);
 
-            Runtime.BeginSessionAccess();
+            Runtime.BeginSessionAccess(providerMock.Object);
 
             Runtime.TabMock.Verify(t=>t.GetData(It.IsAny<ITabContext>()), Times.Never());
         }
@@ -821,11 +880,12 @@ namespace Glimpse.Test.Core.Framework
         [Fact]
         public void StopEndSessionAccessWithRuntimePolicyOff()
         {
+            var providerMock = new Mock<IFrameworkProvider>().Setup();
             Runtime.Configuration.DefaultRuntimePolicy = RuntimePolicy.Off;
             Runtime.TabMock.Setup(t => t.ExecuteOn).Returns(RuntimeEvent.EndSessionAccess);
             Runtime.Configuration.Tabs.Add(Runtime.TabMock.Object);
 
-            Runtime.EndSessionAccess();
+            Runtime.EndSessionAccess(providerMock.Object);
 
             Runtime.TabMock.Verify(t => t.GetData(It.IsAny<ITabContext>()), Times.Never());
         }
@@ -833,7 +893,8 @@ namespace Glimpse.Test.Core.Framework
         [Fact]
         public void ThrowExceptionWhenExecutingResourceWithNullParameters()
         {
-            Assert.Throws<ArgumentNullException>(() => Runtime.ExecuteResource("any", null));
+            var providerMock = new Mock<IFrameworkProvider>().Setup();
+            Assert.Throws<ArgumentNullException>(() => Runtime.ExecuteResource(providerMock.Object, "any", null));
         }
 
         [Fact]

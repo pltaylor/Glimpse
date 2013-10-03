@@ -1,5 +1,6 @@
 ﻿using System;
 using Glimpse.AspNet;
+using Glimpse.Core.Framework;
 using Glimpse.Test.AspNet.Tester;
 using Xunit;
 using Moq;
@@ -34,7 +35,7 @@ namespace Glimpse.Test.AspNet
         {
             HttpModule.BeginRequest(HttpModule.ContextMock.Object);
 
-            HttpModule.RuntimeMock.Verify(r=>r.BeginRequest(), Times.Once());
+            HttpModule.RuntimeMock.Verify(r=>r.BeginRequest(It.IsAny<IFrameworkProvider>()), Times.Once());
         }
 
         [Fact]
