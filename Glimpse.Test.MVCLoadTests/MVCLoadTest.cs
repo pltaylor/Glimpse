@@ -1,22 +1,21 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Threading.Tasks;
 using OpenQA.Selenium.Chrome;
 using Xunit;
 
 namespace Glimpse.Test.MVCLoadTests
 {
-    public class MVCLoadTest:SeleniumTest
+    public class MVCLoadTest : SeleniumTest
     {
         public MVCLoadTest() : base("source\\Glimpse.Mvc4.MusicStore.Sample") { }
 
-        
+
         [Fact]
         public void LoadTest()
         {
             //Arrange
             const int totalCount = 20;
-            const int intervalCount = 100;
+            const int intervalCount = 25;
             var timer = DateTime.Now;
 
             // Act
@@ -26,7 +25,7 @@ namespace Glimpse.Test.MVCLoadTests
                 var driver = new ChromeDriver("C:\\");
                 driver.Url = GetAbsoluteUrl("/");
 
-            for (int j = 0; j < intervalCount; j++)
+                for (int j = 0; j < intervalCount; j++)
                 {
                     driver.Url = GetAbsoluteUrl("/Store/Browse?Genre=Jazz");
                     driver.Url = GetAbsoluteUrl("/Store/Browse?Genre=Electronic");
@@ -47,7 +46,7 @@ namespace Glimpse.Test.MVCLoadTests
 
             var timerFinish = DateTime.Now;
             var delta = timerFinish - timer;
-            
+
             Console.WriteLine("Test took {0} hours, {1} minutes to run", delta.Hours, delta.Minutes);
 
             //Assert

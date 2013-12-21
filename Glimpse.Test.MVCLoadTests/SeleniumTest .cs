@@ -6,8 +6,8 @@ namespace Glimpse.Test.MVCLoadTests
 {
     public class SeleniumTest : IDisposable
     {
-        
-        const int iisPort = 2020;
+
+        const int iisPort = 44444;
         private string _applicationName;
         private Process _iisProcess;
  
