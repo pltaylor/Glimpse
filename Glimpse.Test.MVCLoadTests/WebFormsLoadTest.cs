@@ -5,9 +5,9 @@ using Xunit;
 
 namespace Glimpse.Test.MVCLoadTests
 {
-    public class MVCLoadTest : SeleniumTest
+    public class WebFormsLoadTest: SeleniumTest
     {
-        public MVCLoadTest() : base("source\\Glimpse.Mvc4.MusicStore.Sample", 44444) { }
+        public WebFormsLoadTest() : base("source\\Glimpse.WebForms.WingTip.Sample", 55555) { }
         
         [Fact]
         public void LoadTest()
@@ -26,17 +26,17 @@ namespace Glimpse.Test.MVCLoadTests
 
                 for (int j = 0; j < intervalCount; j++)
                 {
-                    driver.Url = GetAbsoluteUrl("/Store/Browse?Genre=Jazz");
-                    driver.Url = GetAbsoluteUrl("/Store/Browse?Genre=Electronic");
-                    driver.Url = GetAbsoluteUrl("/Store/Browse?Genre=Alternative");
-                    driver.Url = GetAbsoluteUrl("/Store/Browse?Genre=Classical");
-                    driver.Url = GetAbsoluteUrl("/Store/Browse?Genre=Rap");
-                    driver.Url = GetAbsoluteUrl("/Store/Browse?Genre=Latin");
-                    driver.Url = GetAbsoluteUrl("/Store/Browse?Genre=Blues");
-                    driver.Url = GetAbsoluteUrl("/Store/Browse?Genre=Metal");
-                    driver.Url = GetAbsoluteUrl("/Store/Browse?Genre=Rock");
-                    driver.Url = GetAbsoluteUrl("/Store");
-                    driver.Url = GetAbsoluteUrl("/Account/Login?ReturnUrl=%2fStoreManager");
+                    driver.Url = GetAbsoluteUrl("/ProductList/Cars");
+                    driver.Url = GetAbsoluteUrl("/ProductList/Planes");
+                    driver.Url = GetAbsoluteUrl("/ProductList/Trucks");
+                    driver.Url = GetAbsoluteUrl("/ProductList/Boats");
+                    driver.Url = GetAbsoluteUrl("/ProductList/Rockets");
+                    driver.Url = GetAbsoluteUrl("/Product/Convertible%20Car");
+                    driver.Url = GetAbsoluteUrl("/Product/Old-time%20Car");
+                    driver.Url = GetAbsoluteUrl("/Product/Fast%20Car");
+                    driver.Url = GetAbsoluteUrl("/Product/Super%20Fast%20Car");
+                    driver.Url = GetAbsoluteUrl("/Product/Old%20Style%20Racer");
+                    driver.Url = GetAbsoluteUrl("/ProductList");
                 }
 
 

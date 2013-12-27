@@ -7,13 +7,14 @@ namespace Glimpse.Test.MVCLoadTests
     public class SeleniumTest : IDisposable
     {
 
-        const int iisPort = 44444;
+        int _IISPort = 44444;
         private string _applicationName;
         private Process _iisProcess;
  
-        protected SeleniumTest(string applicationName) 
+        protected SeleniumTest(string applicationName, int port) 
         {
             _applicationName = applicationName;
+            _IISPort = port;
             // Start IISExpress
             StartIIS();
         }
@@ -34,7 +35,7 @@ namespace Glimpse.Test.MVCLoadTests
 
             _iisProcess = new Process();
             _iisProcess.StartInfo.FileName = programFiles + "\\IIS Express\\iisexpress.exe";
-            _iisProcess.StartInfo.Arguments = string.Format("/path:\"{0}\" /port:{1}", applicationPath, iisPort);
+            _iisProcess.StartInfo.Arguments = string.Format("/path:\"{0}\" /port:{1}", applicationPath, _IISPort);
             _iisProcess.Start();
         }
  
@@ -49,7 +50,7 @@ namespace Glimpse.Test.MVCLoadTests
             if (!relativeUrl.StartsWith("/")) {
                 relativeUrl = "/" + relativeUrl;
             }
-            return String.Format("http://localhost:{0}{1}", iisPort, relativeUrl);
+            return String.Format("http://localhost:{0}{1}", _IISPort, relativeUrl);
         }
  
  
